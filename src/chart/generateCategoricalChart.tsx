@@ -331,8 +331,12 @@ export const getAxisMapByAxes = (
 
   // Eliminate duplicated axes
   return axes.reduce((result: AxisMap, child: ReactElement): AxisMap => {
-    const { type, dataKey, allowDataOverflow, allowDuplicatedCategory, scale, ticks, includeHidden } = child.props;
-    const axisId = child.props[axisIdKey];
+    const childProps =
+      (child.type as any).defaultProps !== undefined
+        ? { ...(child.type as any).defaultProps, ...child.props }
+        : child.props;
+    const { type, dataKey, allowDataOverflow, allowDuplicatedCategory, scale, ticks, includeHidden } = childProps;
+    const axisId = childProps[axisIdKey];
 
     if (result[axisId]) {
       return result;
@@ -355,8 +359,8 @@ export const getAxisMapByAxes = (
      * The only thing that would prohibit short-circuiting is when the user doesn't allow data overflow,
      * because the axis is supposed to ignore the specified domain that way.
      */
-    if (isDomainSpecifiedByUser(child.props.domain, allowDataOverflow, type)) {
-      domain = parseSpecifiedDomain(child.props.domain, null, allowDataOverflow);
+    if (isDomainSpecifiedByUser(childProps.domain, allowDataOverflow, type)) {
+      domain = parseSpecifiedDomain(childProps.domain, null, allowDataOverflow);
       /* The chart can be categorical and have the domain specified in numbers
        * we still need to calculate the categorical domain
        * TODO: refactor this more
@@ -371,7 +375,7 @@ export const getAxisMapByAxes = (
 
     // we didn't create the domain from user's props above, so we need to calculate it
     if (!domain || domain.length === 0) {
-      const childDomain = child.props.domain ?? defaultDomain;
+      const childDomain = childProps.domain ?? defaultDomain;
 
       if (dataKey) {
         // has dataKey in <Axis />
@@ -462,12 +466,12 @@ export const getAxisMapByAxes = (
     return {
       ...result,
       [axisId]: {
-        ...child.props,
+        ...childProps,
         axisType,
         domain,
         categoricalDomain,
         duplicateDomain,
-        originalDomain: child.props.domain ?? defaultDomain,
+        originalDomain: childProps.domain ?? defaultDomain,
         isCategorical,
         layout,
       },
@@ -523,7 +527,11 @@ const getAxisMapByItems = (
   // The default type of y-axis is number axis
   // The default contents of y-axis is the domain of data
   return graphicalItems.reduce((result: AxisMap, child: ReactElement): AxisMap => {
-    const axisId = child.props[axisIdKey];
+    const childProps =
+      (child.type as any).defaultProps !== undefined
+        ? { ...(child.type as any).defaultProps, ...child.props }
+        : child.props;
+    const axisId = childProps[axisIdKey];
 
     const originalDomain = getDefaultDomainByAxisType('number');
 
